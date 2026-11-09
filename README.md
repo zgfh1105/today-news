@@ -49,6 +49,18 @@ python run.py
 ```
 访问地址就可以打开：http://127.0.0.1:5000/
 
+### 爬虫触发接口安全配置
+
+`/crawl` 会启动后台采集任务，默认关闭。需要主动配置 `CRAWL_API_TOKEN` 环境变量后才能调用：
+
+```bash
+export CRAWL_API_TOKEN='请替换为足够长的随机值'
+curl -X GET http://127.0.0.1:5000/crawl \\
+  -H "Authorization: Bearer $CRAWL_API_TOKEN"
+```
+
+未配置令牌时 `/crawl` 返回 503；令牌缺失或不匹配时返回 401。不要把真实令牌提交到 Git。生产环境请使用 WSGI 服务器并置于 HTTPS 反向代理后。
+
 
 ## 扩展
 如果需要更多的新闻源，可以自己抓取新的新闻源，放在`spiders`文件夹下，按照如下字段解析
