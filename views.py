@@ -5,6 +5,8 @@
 
 
 import time
+import os
+import hmac
 
 from flask import render_template, request, jsonify
 from playhouse.shortcuts import model_to_dict
@@ -37,6 +39,16 @@ def index():
 
 
 def crawl():
+    # 爬虫触发接口必须配置独立令牌；未配置时默认关闭，避免公网未授权触发。
+    expected_token = os.environ.get("CRAWL_API_TOKEN", "")
+    if not expected_token:
+        return jsonify({"error": "crawl endpoint is disabled: configure CRAWL_API_TOKEN"}), 503
+
+    authorization = request.headers.get("Authorization", "")
+    provided_token = authorization[7:].strip() if authorization.lower().startswith("bearer ") else ""
+    if not provided_token or not hmac.compare_digest(provided_token, expected_token):
+        return jsonify({"error": "unauthorized"}), 401
+
     start_time = time.time()
     # toutiao_count = toutiao_spider.crawl()
     # weixin_count = weixin_spider.crawl()
