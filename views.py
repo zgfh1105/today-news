@@ -40,12 +40,14 @@ def index():
 
 def crawl():
     # 爬虫触发接口必须配置独立令牌；未配置时默认关闭，避免公网未授权触发。
+    # 从服务器环境变量读取令牌，禁止把真实令牌硬编码或提交到仓库。
     expected_token = os.environ.get("CRAWL_API_TOKEN", "")
     if not expected_token:
         return jsonify({"error": "crawl endpoint is disabled: configure CRAWL_API_TOKEN"}), 503
 
     authorization = request.headers.get("Authorization", "")
     provided_token = authorization[7:].strip() if authorization.lower().startswith("bearer ") else ""
+    # 使用恒定时间比较，降低普通字符串比较可能产生的时序侧信道。
     if not provided_token or not hmac.compare_digest(provided_token, expected_token):
         return jsonify({"error": "unauthorized"}), 401
 
